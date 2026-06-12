@@ -107,7 +107,10 @@ RUN mkdir -p \
         bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 755 storage bootstrap/cache \
-    && mkdir -p /run/nginx
+    && mkdir -p /run/nginx \
+    && mkdir -p /var/lib/nginx/tmp/client_body \
+    && chown -R www-data:www-data /var/lib/nginx \
+    && chmod -R 755 /var/lib/nginx
 
 COPY docker/start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
