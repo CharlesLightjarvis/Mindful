@@ -32,27 +32,29 @@ RUN php artisan package:discover --ansi 2>/dev/null || true
 # =============================================================================
 # Stage 2 — Node.js asset + SSR bundle build
 # =============================================================================
-FROM node:22 AS node-build
-
-WORKDIR /app
+FROM php:8.4-cli-alpine AS node-build
 
 # PHP is required during Vite build because @laravel/vite-plugin-wayfinder
 # runs: php artisan wayfinder:generate --with-form
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        php-cli \
-        php-mbstring \
-        php-xml \
-        php-curl \
-        php-zip \
-        php-mysql \
-        php-sqlite3 \
-        php-bcmath \
-        php-intl \
-        unzip \
+RUN apk add --no-cache \
+        nodejs \
+        npm \
         git \
+        unzip \
+        curl \
         ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+        libstdc++ \
+        libpng-dev \
+        libjpeg-turbo-dev \
+        freetype-dev \
+        icu-dev \
+        libzip-dev \
+        oniguruma-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        bcmath exif gd intl mbstring pcntl pdo pdo_mysql zip
+
+WORKDIR /app
 
 COPY package.json package-lock.json ./
 RUN npm ci --prefer-offline
@@ -89,9 +91,8 @@ RUN apk add --no-cache --virtual .build-deps \
     && apk del .build-deps \
     && rm -rf /var/cache/apk/*
 
-# Node.js binary needed at runtime by `php artisan inertia:start-ssr`
-# Both images are Alpine-based (musl libc) so the binary is compatible
-COPY --from=node:22-alpine /usr/local/bin/node /usr/local/bin/node
+# Node.js needed at runtime by `php artisan inertia:start-ssr`
+RUN apk add --no-cache nodejs npm
 
 # PHP configuration
 COPY docker/php/php.ini        "$PHP_INI_DIR/conf.d/99-app.ini"
