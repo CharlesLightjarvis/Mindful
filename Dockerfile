@@ -32,7 +32,7 @@ RUN php artisan package:discover --ansi 2>/dev/null || true
 # =============================================================================
 # Stage 2 — Node.js asset + SSR bundle build
 # =============================================================================
-FROM node:22-alpine AS node-build
+FROM node:22 AS node-build
 
 WORKDIR /app
 
