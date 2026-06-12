@@ -109,9 +109,12 @@ RUN mkdir -p \
     && chmod -R 755 storage bootstrap/cache \
     && mkdir -p /run/nginx
 
+COPY docker/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
     CMD curl -fsSL http://localhost/ > /dev/null || exit 1
 
-CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord.conf"]
+CMD ["/usr/local/bin/start.sh"]
