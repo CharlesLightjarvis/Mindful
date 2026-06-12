@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use App\Enums\LessonType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
+
+class Lesson extends Model implements Sortable
+{
+    use HasFactory, SortableTrait;
+
+    protected $fillable = [
+        'module_id',
+        'title',
+        'duration',
+        'is_free',
+        'order',
+        'type',
+        'video_url',
+        'audio_url',
+        'pdf_url',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_free' => 'boolean',
+            'type' => LessonType::class,
+        ];
+    }
+
+    public array $sortable = [
+        'sort_when_creating' => true,
+        'order_column_name' => 'order',
+    ];
+
+    public function module(): BelongsTo
+    {
+        return $this->belongsTo(Module::class);
+    }
+}
