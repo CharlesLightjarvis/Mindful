@@ -32,34 +32,15 @@ RUN php artisan package:discover --ansi 2>/dev/null || true
 # =============================================================================
 # Stage 2 — Node.js asset + SSR bundle build
 # =============================================================================
-FROM php:8.4-cli-alpine AS node-build
+# Reuse composer-deps: PHP 8.4 + extensions + vendor + artisan already present.
+# Wayfinder runs `php artisan wayfinder:generate` during the Vite build.
+FROM composer-deps AS node-build
 
-# PHP is required during Vite build because @laravel/vite-plugin-wayfinder
-# runs: php artisan wayfinder:generate --with-form
-RUN apk add --no-cache \
-        nodejs \
-        npm \
-        git \
-        unzip \
-        curl \
-        ca-certificates \
-        libstdc++ \
-        libpng-dev \
-        libjpeg-turbo-dev \
-        freetype-dev \
-        icu-dev \
-        libzip-dev \
-        oniguruma-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-        bcmath exif gd intl mbstring pcntl pdo pdo_mysql zip
+RUN apk add --no-cache nodejs npm
 
-WORKDIR /app
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 
-COPY package.json package-lock.json ./
 RUN npm ci --prefer-offline
-
-COPY --from=composer-deps /app .
 
 # Builds both client bundle (public/build) and SSR bundle (bootstrap/ssr)
 RUN npm run build:ssr
