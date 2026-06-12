@@ -26,7 +26,7 @@ use Inertia\Inertia;
 use Laravel\Cashier\Cashier;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use League\Flysystem\Filesystem;
-use TaffoVelikoff\ImageKitAdapter\ImageKitAdapter;
+use TaffoVelikoff\ImageKitAdapter\ImagekitAdapter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -62,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
     protected function configureStorage(): void
     {
         Storage::extend('imagekit', function ($app, $config) {
-            $adapter = new ImageKitAdapter(
+            $adapter = new ImagekitAdapter(
                 new ImageKit(
                     $config['public_key'],
                     $config['private_key'],
