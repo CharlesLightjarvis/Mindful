@@ -36,6 +36,24 @@ FROM node:22 AS node-build
 
 WORKDIR /app
 
+# PHP is required during Vite build because @laravel/vite-plugin-wayfinder
+# runs: php artisan wayfinder:generate --with-form
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        php-cli \
+        php-mbstring \
+        php-xml \
+        php-curl \
+        php-zip \
+        php-mysql \
+        php-sqlite3 \
+        php-bcmath \
+        php-intl \
+        unzip \
+        git \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 RUN npm ci --prefer-offline
 
