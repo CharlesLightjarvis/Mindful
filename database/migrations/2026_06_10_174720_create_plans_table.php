@@ -22,7 +22,7 @@ return new class extends Migration
             $table->unsignedInteger('price');
             $table->string('currency', 3)->default(PlanCurrencyEnum::Eur->value);
             $table->string('interval')->default(PlanIntervalEnum::Month->value);
-            $table->json('features')->default('[]');
+            $table->json('features')->nullable();
             $table->boolean('highlight')->default(false);
             $table->boolean('is_active')->default(true);
             $table->unsignedSmallInteger('order')->default(0);

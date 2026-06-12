@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\PlanCurrencyEnum;
 use App\Enums\PlanIntervalEnum;
+use Database\Factories\PlanFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\EloquentSortable\Sortable;
@@ -13,7 +14,7 @@ use Spatie\Sluggable\SlugOptions;
 
 class Plan extends Model implements Sortable
 {
-    /** @use HasFactory<\Database\Factories\PlanFactory> */
+    /** @use HasFactory<PlanFactory> */
     use HasFactory, HasSlug, SortableTrait;
 
     protected $fillable = [
@@ -28,6 +29,10 @@ class Plan extends Model implements Sortable
         'highlight',
         'is_active',
         'order',
+    ];
+
+    protected $attributes = [
+        'features' => '[]',
     ];
 
     public array $sortable = [
@@ -45,18 +50,17 @@ class Plan extends Model implements Sortable
     protected function casts(): array
     {
         return [
-            'features'  => 'array',
+            'features' => 'array',
             'highlight' => 'boolean',
             'is_active' => 'boolean',
-            'price'     => 'integer',
-            'currency'  => PlanCurrencyEnum::class,
-            'interval'  => PlanIntervalEnum::class,
+            'price' => 'integer',
+            'currency' => PlanCurrencyEnum::class,
+            'interval' => PlanIntervalEnum::class,
         ];
     }
 
-
     public function formattedPrice(): string
     {
-        return number_format($this->price / 100, 0, ',', ' ') . ' ' . $this->currency->symbol();
+        return number_format($this->price / 100, 0, ',', ' ').' '.$this->currency->symbol();
     }
 }
