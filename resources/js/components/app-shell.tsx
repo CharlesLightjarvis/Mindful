@@ -17,5 +17,9 @@ export function AppShell({ children, variant = 'sidebar' }: Props) {
         );
     }
 
-    return <SidebarProvider defaultOpen={isOpen}>{children}</SidebarProvider>;
+    return (
+        <div className="h-svh overflow-hidden">
+            <SidebarProvider defaultOpen={isOpen}>{children}</SidebarProvider>
+        </div>
+    );
 }

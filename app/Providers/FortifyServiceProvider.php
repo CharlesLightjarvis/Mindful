@@ -32,7 +32,6 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
-        $this->configureRedirects();
     }
 
     /**
@@ -75,22 +74,6 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/two-factor-challenge'));
 
         Fortify::confirmPasswordView(fn () => Inertia::render('auth/confirm-password'));
-    }
-
-    private function configureRedirects(): void
-    {
-        $redirect = function (Request $request) {
-            $user = $request->user();
-
-            $default = match (true) {
-                $user->isAdmin() => route('admin.dashboard'),
-                $user->isTrainer() => route('trainer.dashboard'),
-                $user->isStudent() => route('student.dashboard'),
-                default => route('home'),
-            };
-
-            return redirect()->intended($default);
-        };
     }
 
     /**

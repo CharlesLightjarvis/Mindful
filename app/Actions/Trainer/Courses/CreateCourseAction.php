@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Trainer\Courses;
 
 use App\Models\Course;
@@ -16,6 +18,7 @@ class CreateCourseAction
     public function __construct(
         private readonly CourseRepository $repository,
         private readonly UploadCourseImageAction $uploadImage,
+        private readonly CreateLessonAction $createLesson,
     ) {}
 
     public function handle(User $trainer, array $data): Course
@@ -55,7 +58,7 @@ class CreateCourseAction
                 $module = $course->modules()->create($moduleData);
 
                 foreach ($lessons as $lessonData) {
-                    $module->lessons()->create($lessonData);
+                    $this->createLesson->handle($module, $lessonData);
                 }
             }
 

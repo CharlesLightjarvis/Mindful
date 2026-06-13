@@ -2,14 +2,19 @@
 
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Stripe\Exception\ApiErrorException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -43,4 +48,23 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $exceptions->renderable(function (Throwable $e, Request $request) {
+            if (
+                $request->is('api/*')
+                || ! $request->hasSession()
+                || $e instanceof HttpResponseException
+                || $e instanceof ValidationException
+                || $e instanceof AuthenticationException
+                || $e instanceof HttpException
+            ) {
+                return null;
+            }
+
+            $message = $e instanceof ApiErrorException
+                ? 'Une erreur de paiement est survenue. Veuillez réessayer ou contacter le support.'
+                : 'Une erreur inattendue est survenue. Veuillez réessayer.';
+
+            return back()->withInput()->with('error', $message);
+        });
     })->create();

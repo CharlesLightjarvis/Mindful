@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Form, Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-import { ModulesLessons } from '@/pages/admin/courses/partials/modules-lessons';
+import { ModulesLessons } from './partials/modules-lessons';
 import trainer from '@/routes/trainer';
 import { ImageUpload } from '@/components/image-upload';
 import InputError from '@/components/input-error';
@@ -31,7 +31,6 @@ export default function CourseCreate() {
     const { categories } = usePage<PageProps>().props;
 
     const [categoryId, setCategoryId] = useState('');
-    const [featured, setFeatured] = useState(false);
     const [benefits, setBenefits] = useState<string[]>([]);
     const [objectives, setObjectives] = useState<
         { title: string; description: string }[]
@@ -60,7 +59,7 @@ export default function CourseCreate() {
                           ...m,
                           lessons: [
                               ...m.lessons,
-                              { title: '', duration: 15, is_free: false },
+                              { title: '', duration: 15, is_free: false, type: 'video_url' as const },
                           ],
                       }
                     : m,
@@ -77,8 +76,8 @@ export default function CourseCreate() {
     const updateLesson = (
         mi: number,
         li: number,
-        field: 'title' | 'duration' | 'is_free',
-        value: string | number | boolean,
+        field: keyof import('@/types').Lesson,
+        value: string | number | boolean | null,
     ) =>
         setModules((p) =>
             p.map((m, i) =>
@@ -119,11 +118,6 @@ export default function CourseCreate() {
                                 value={categoryId}
                             />
                             <input type="hidden" name="status" value="draft" />
-                            <input
-                                type="hidden"
-                                name="featured"
-                                value={featured ? '1' : '0'}
-                            />
                             {benefits.map((b, i) => (
                                 <input
                                     key={i}
@@ -156,33 +150,17 @@ export default function CourseCreate() {
                             ))}
                             {modules.map((mod, mi) => (
                                 <span key={mi}>
-                                    <input
-                                        type="hidden"
-                                        name={`modules[${mi}][title]`}
-                                        value={mod.title}
-                                    />
-                                    <input
-                                        type="hidden"
-                                        name={`modules[${mi}][duration]`}
-                                        value={mod.duration}
-                                    />
+                                    <input type="hidden" name={`modules[${mi}][title]`} value={mod.title} />
+                                    <input type="hidden" name={`modules[${mi}][duration]`} value={mod.duration} />
                                     {mod.lessons.map((l, li) => (
                                         <span key={li}>
-                                            <input
-                                                type="hidden"
-                                                name={`modules[${mi}][lessons][${li}][title]`}
-                                                value={l.title}
-                                            />
-                                            <input
-                                                type="hidden"
-                                                name={`modules[${mi}][lessons][${li}][duration]`}
-                                                value={l.duration}
-                                            />
-                                            <input
-                                                type="hidden"
-                                                name={`modules[${mi}][lessons][${li}][is_free]`}
-                                                value={l.is_free ? '1' : '0'}
-                                            />
+                                            <input type="hidden" name={`modules[${mi}][lessons][${li}][title]`} value={l.title} />
+                                            <input type="hidden" name={`modules[${mi}][lessons][${li}][duration]`} value={l.duration} />
+                                            <input type="hidden" name={`modules[${mi}][lessons][${li}][is_free]`} value={l.is_free ? '1' : '0'} />
+                                            <input type="hidden" name={`modules[${mi}][lessons][${li}][type]`} value={l.type ?? 'video_url'} />
+                                            {l.type === 'video_url' && (
+                                                <input type="hidden" name={`modules[${mi}][lessons][${li}][video_url]`} value={l.video_url ?? ''} />
+                                            )}
                                         </span>
                                     ))}
                                 </span>
@@ -287,12 +265,6 @@ export default function CourseCreate() {
                                         <InputError message={errors.duration} />
                                     </div>
 
-                                    <div className="sm:col-span-2 lg:col-span-5">
-                                        <div
-                                            className="h-6"
-                                            aria-hidden="true"
-                                        />
-                                    </div>
                                 </div>
 
                                 <div className="space-y-2 sm:col-span-2 lg:col-span-12">

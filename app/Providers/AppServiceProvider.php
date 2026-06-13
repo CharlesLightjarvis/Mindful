@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\LoginResponse;
 use App\Http\Responses\RegisterResponse;
 use App\Repositories\Admin\Courses\CourseRepository as AdminCourseRepository;
 use App\Repositories\Admin\Courses\EloquentCourseRepository as AdminEloquentCourseRepository;
@@ -24,6 +25,7 @@ use ImageKit\ImageKit;
 use Inertia\ExceptionResponse;
 use Inertia\Inertia;
 use Laravel\Cashier\Cashier;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use League\Flysystem\Filesystem;
 use TaffoVelikoff\ImageKitAdapter\ImagekitAdapter;
@@ -37,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Cashier::ignoreRoutes();
 
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
         $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
 
         $this->app->bind(CourseRepository::class, EloquentCourseRepository::class);
