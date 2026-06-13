@@ -1,24 +1,22 @@
 import { Head, usePage } from '@inertiajs/react';
-import { BookOpen, CreditCard, GraduationCap, Users } from 'lucide-react';
-import admin from '@/routes/admin';
+import { BookOpen, CheckCircle, GraduationCap } from 'lucide-react';
+import trainer from '@/routes/trainer';
 
 type Props = {
     stats: {
         totalCourses: number;
-        totalTrainers: number;
         totalStudents: number;
-        totalEnrollments: number;
+        publishedCourses: number;
     };
 };
 
-export default function AdminDashboard() {
+export default function TrainerDashboard() {
     const { stats } = usePage<Props>().props;
 
     const cards = [
-        { label: 'Formations', value: stats.totalCourses, icon: BookOpen },
-        { label: 'Formateurs', value: stats.totalTrainers, icon: Users },
-        { label: 'Étudiants', value: stats.totalStudents, icon: GraduationCap },
-        { label: 'Inscriptions', value: stats.totalEnrollments, icon: CreditCard },
+        { label: 'Mes formations', value: stats.totalCourses, icon: BookOpen },
+        { label: 'Publiées', value: stats.publishedCourses, icon: CheckCircle },
+        { label: 'Étudiants inscrits', value: stats.totalStudents, icon: GraduationCap },
     ];
 
     return (
@@ -28,10 +26,10 @@ export default function AdminDashboard() {
             <div className="container mx-auto space-y-6 p-4">
                 <div className="flex flex-col space-y-1">
                     <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                    <p className="text-muted-foreground">Vue d'ensemble de la plateforme.</p>
+                    <p className="text-muted-foreground">Bienvenue sur votre espace formateur.</p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-3">
                     {cards.map(({ label, value, icon: Icon }) => (
                         <div
                             key={label}
@@ -50,6 +48,6 @@ export default function AdminDashboard() {
     );
 }
 
-AdminDashboard.layout = {
-    breadcrumbs: [{ title: 'Dashboard', href: admin.dashboard() }],
+TrainerDashboard.layout = {
+    breadcrumbs: [{ title: 'Dashboard', href: trainer.dashboard() }],
 };

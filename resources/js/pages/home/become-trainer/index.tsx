@@ -117,7 +117,7 @@ export default function BecomeTrainer() {
 
     function handleCheckout(slug: string) {
         if (!auth.user) {
-            router.visit(`/register?checkout_plan=${slug}`);
+            router.visit(`/become-trainer/checkout/${slug}`);
             return;
         }
         router.post('/become-trainer/checkout', { plan_slug: slug });

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Form, Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import InputError from '@/components/input-error';
+import admin from '@/routes/admin';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -196,8 +197,8 @@ export default function PlanCreate() {
 
 PlanCreate.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Plans', href: '/admin/plans' },
-        { title: 'Nouveau plan', href: '/admin/plans/create' },
+        { title: 'Dashboard', href: admin.dashboard() },
+        { title: 'Plans', href: admin.plans.index() },
+        { title: 'Nouveau plan', href: admin.plans.create() },
     ],
 };

@@ -2,13 +2,26 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { createPortal } from 'react-dom';
 import { useScroll } from './use-scroll';
-import { Link, usePage } from '@inertiajs/react';
-import type { Auth } from '@/types';
+import { Link, router, usePage } from '@inertiajs/react';
+import type { Auth, User } from '@/types';
 import { Button, buttonVariants } from '@/components/ui/button';
 import ThemeToggle from './ThemeToggle';
 import { MenuToggleIcon } from './menu-toggle-icon';
 import Logo from './logo';
-import { dashboard, login, register } from '@/routes';
+import { login, logout, register, blog, about, contact } from '@/routes';
+import publicCourses from '@/actions/App/Http/Controllers/Public/Courses/CourseController';
+import becomeTrainer from '@/actions/App/Http/Controllers/Public/BecomeTrainer/TrainerPlanController';
+import admin from '@/routes/admin';
+import trainer from '@/routes/trainer';
+import student from '@/routes/student';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     NavigationMenu,
     NavigationMenuItem,
@@ -17,12 +30,56 @@ import {
 } from '@/components/ui/navigation-menu';
 
 const simpleLinks = [
-    { label: 'Nos Formations', href: '/courses' },
-    { label: 'Devenir Formateur', href: '/become-trainer' },
-    { label: 'Blog', href: '/blog' },
-    { label: 'À propos', href: '/about' },
-    { label: 'Contact', href: '/contact' },
+    { label: 'Nos Formations', href: publicCourses.index.url() },
+    { label: 'Devenir Formateur', href: becomeTrainer.index.url() },
+    { label: 'Blog', href: blog.url() },
+    { label: 'À propos', href: about.url() },
+    { label: 'Contact', href: contact.url() },
 ];
+
+function initials(name: string): string {
+    return name
+        .split(' ')
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+}
+
+function dashboardHrefFor(user: User): string {
+    if (user.is_admin) return admin.dashboard.url();
+    if (user.is_trainer) return trainer.dashboard.url();
+    return student.dashboard.url();
+}
+
+/* ------------------------------------------------------------------ */
+/* Petit dropdown avatar (desktop)                                     */
+/* ------------------------------------------------------------------ */
+
+function UserMenu({ user }: { user: User }) {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground ring-offset-background transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                    {initials(user.name)}
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel className="font-normal">
+                    <p className="truncate text-sm font-medium">{user.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                    onClick={() => router.post(logout.url())}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                >
+                    Se déconnecter
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
 
 /* ------------------------------------------------------------------ */
 /* Header                                                             */
@@ -35,6 +92,8 @@ export function Header() {
         auth: Auth;
         canRegister?: boolean;
     }>().props;
+
+    const hasRole = auth.user?.is_admin || auth.user?.is_trainer || auth.user?.is_student;
 
     React.useEffect(() => {
         document.body.style.overflow = open ? 'hidden' : '';
@@ -84,13 +143,17 @@ export function Header() {
                 {/* CTA — droite écran */}
                 <div className="ml-auto hidden items-center justify-end gap-2 lg:flex">
                     {auth.user ? (
-                        <Button
-                            variant="secondary"
-                            className="shrink-0 rounded-full"
-                            asChild
-                        >
-                            <Link href={dashboard()}>Dashboard</Link>
-                        </Button>
+                        hasRole ? (
+                            <Button
+                                variant="secondary"
+                                className="shrink-0 rounded-full"
+                                asChild
+                            >
+                                <Link href={dashboardHrefFor(auth.user)}>Dashboard</Link>
+                            </Button>
+                        ) : (
+                            <UserMenu user={auth.user} />
+                        )
                     ) : (
                         <>
                             <Button
@@ -149,6 +212,8 @@ function MobileMenu({
     auth: Auth;
     canRegister?: boolean;
 }) {
+    const hasRole = auth.user?.is_admin || auth.user?.is_trainer || auth.user?.is_student;
+
     if (!open || typeof window === 'undefined') return null;
 
     return createPortal(
@@ -182,10 +247,32 @@ function MobileMenu({
                         </span>
                         <ThemeToggle />
                     </div>
+
                     {auth.user ? (
-                        <Button variant="secondary" className="w-full" asChild>
-                            <Link href={dashboard()}>Dashboard</Link>
-                        </Button>
+                        hasRole ? (
+                            <Button variant="secondary" className="w-full" asChild>
+                                <Link href={dashboardHrefFor(auth.user)}>Dashboard</Link>
+                            </Button>
+                        ) : (
+                            <>
+                                <div className="flex items-center gap-3 rounded-md border border-border/40 px-3 py-2">
+                                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+                                        {initials(auth.user.name)}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-medium">{auth.user.name}</p>
+                                        <p className="truncate text-xs text-muted-foreground">{auth.user.email}</p>
+                                    </div>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    className="w-full text-destructive hover:text-destructive"
+                                    onClick={() => router.post(logout.url())}
+                                >
+                                    Se déconnecter
+                                </Button>
+                            </>
+                        )
                     ) : (
                         <>
                             <Button

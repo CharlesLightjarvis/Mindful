@@ -1,5 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
+import trainer from '@/routes/trainer';
 import CourseList from './partials/course-list';
 import type { Paginated } from '@/types/pagination';
 import type { Course } from '@/types/course';
@@ -33,7 +34,7 @@ export default function CourseIndex() {
 
 CourseIndex.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Mes formations', href: '/trainer/courses' },
+        { title: 'Dashboard', href: trainer.dashboard() },
+        { title: 'Mes formations', href: trainer.courses.index() },
     ],
 };

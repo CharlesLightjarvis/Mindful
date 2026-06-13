@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin\Courses;
 use App\Actions\Admin\Courses\CreateCourseAction;
 use App\Actions\Admin\Courses\DeleteCourseAction;
 use App\Actions\Admin\Courses\UpdateCourseAction;
+use App\Enums\CourseStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Courses\StoreCourseRequest;
 use App\Http\Requests\Admin\Courses\UpdateCourseRequest;
@@ -24,7 +25,7 @@ use Inertia\Response;
 class CourseController extends Controller
 {
     public function __construct(
-        private readonly CourseRepository   $repository,
+        private readonly CourseRepository $repository,
         private readonly CreateCourseAction $createAction,
         private readonly UpdateCourseAction $updateAction,
         private readonly DeleteCourseAction $deleteAction,
@@ -48,10 +49,10 @@ class CourseController extends Controller
 
         return Inertia::render('admin/courses/create', [
             'categories' => Category::query()->orderBy('order')->get(['id', 'name']),
-            'trainers'   => $user->isAdmin()
+            'trainers' => $user->isAdmin()
                 ? User::trainers()->get(['id', 'name'])->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
                 : [],
-            'is_admin'   => $user->isAdmin(),
+            'is_admin' => $user->isAdmin(),
             'trainer_id' => $user->isAdmin() ? null : $user->id,
         ]);
     }
@@ -81,12 +82,12 @@ class CourseController extends Controller
         $user = Auth::user();
 
         return Inertia::render('admin/courses/edit', [
-            'course'     => (new CourseResource($this->repository->find($course->id)))->resolve(),
+            'course' => (new CourseResource($this->repository->find($course->id)))->resolve(),
             'categories' => Category::query()->orderBy('order')->get(['id', 'name']),
-            'trainers'   => $user->isAdmin()
+            'trainers' => $user->isAdmin()
                 ? User::trainers()->get(['id', 'name'])->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
                 : [],
-            'is_admin'   => $user->isAdmin(),
+            'is_admin' => $user->isAdmin(),
         ]);
     }
 
@@ -116,5 +117,17 @@ class CourseController extends Controller
         return redirect()
             ->route('admin.courses.index')
             ->with('success', 'Formation supprimée avec succès.');
+    }
+
+    #[Authorize('update', 'course')]
+    public function toggleStatus(Course $course): RedirectResponse
+    {
+        $newStatus = $course->status === CourseStatus::Published
+            ? CourseStatus::Draft
+            : CourseStatus::Published;
+
+        $course->update(['status' => $newStatus->value]);
+
+        return back()->with('success', "Formation passée en « {$newStatus->label()} ».");
     }
 }

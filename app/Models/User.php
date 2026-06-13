@@ -70,6 +70,11 @@ class User extends Authenticatable implements PasskeyUser
         $query->whereHas('roles', fn (Builder $q) => $q->where('name', 'trainer'));
     }
 
+    public function scopeStudents(Builder $query): void
+    {
+        $query->whereHas('roles', fn (Builder $q) => $q->where('name', 'student'));
+    }
+
     public function scopeAdmins(Builder $query): void
     {
         $query->whereHas('roles', fn (Builder $q) => $q->whereIn('name', ['admin', 'super-admin']));

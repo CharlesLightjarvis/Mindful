@@ -13,11 +13,14 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
+import admin from '@/routes/admin';
+import trainer from '@/routes/trainer';
+import student from '@/routes/student';
 import adminCourses from '@/actions/App/Http/Controllers/Admin/Courses/CourseController';
 import adminPlans from '@/actions/App/Http/Controllers/Admin/Plans/PlanController';
 import trainerCourses from '@/actions/App/Http/Controllers/Trainer/Courses/CourseController';
+import studentCourses from '@/actions/App/Http/Controllers/Student/Courses/CourseController';
 
 const footerNavItems: NavItem[] = [
     {
@@ -36,10 +39,16 @@ export function AppSidebar() {
     const { auth } = usePage().props;
     const user = auth.user;
 
+    const dashboardHref = user?.is_admin
+        ? admin.dashboard()
+        : user?.is_trainer
+          ? trainer.dashboard()
+          : student.dashboard();
+
     const mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard(),
+            href: dashboardHref,
             icon: LayoutGrid,
         },
         ...(user?.is_admin
@@ -69,7 +78,7 @@ export function AppSidebar() {
             ? [
                   {
                       title: 'Mes Formations',
-                      href: '/student/courses',
+                      href: studentCourses.index(),
                       icon: GraduationCap,
                   },
               ]
@@ -82,7 +91,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={dashboardHref} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

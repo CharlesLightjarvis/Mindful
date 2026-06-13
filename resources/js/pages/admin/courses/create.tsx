@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Form, Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
+import admin from '@/routes/admin';
 import { ModulesLessons } from './partials/modules-lessons';
 import { ImageUpload } from '@/components/image-upload';
 import InputError from '@/components/input-error';
@@ -58,7 +59,6 @@ export default function CourseCreate() {
         trainer_id ? String(trainer_id) : '',
     );
     const [categoryId, setCategoryId] = useState('');
-    const [status, setStatus] = useState<'draft' | 'published'>('draft');
     const [featured, setFeatured] = useState(false);
     const [benefits, setBenefits] = useState<string[]>([]);
     const [objectives, setObjectives] = useState<
@@ -150,7 +150,7 @@ export default function CourseCreate() {
                                 name="category_id"
                                 value={categoryId}
                             />
-                            <input type="hidden" name="status" value={status} />
+                            <input type="hidden" name="status" value="draft" />
                             <input
                                 type="hidden"
                                 name="featured"
@@ -393,30 +393,6 @@ export default function CourseCreate() {
                                             }
                                         />
                                         <InputError message={errors.duration} />
-                                    </div>
-
-                                    <div className="space-y-2 sm:col-span-1 lg:col-span-3">
-                                        <Label>Statut *</Label>
-                                        <Select
-                                            value={status}
-                                            onValueChange={(v) =>
-                                                setStatus(
-                                                    v as 'draft' | 'published',
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger className="h-10 w-full">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="draft">
-                                                    Brouillon
-                                                </SelectItem>
-                                                <SelectItem value="published">
-                                                    Publié
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
                                     </div>
 
                                     <div className="sm:col-span-2 lg:col-span-4">
@@ -744,8 +720,8 @@ export default function CourseCreate() {
 
 CourseCreate.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Formations', href: '/admin/courses' },
-        { title: 'Nouvelle formation', href: '/admin/courses/create' },
+        { title: 'Dashboard', href: admin.dashboard() },
+        { title: 'Formations', href: admin.courses.index() },
+        { title: 'Nouvelle formation', href: admin.courses.create() },
     ],
 };

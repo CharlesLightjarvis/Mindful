@@ -109,7 +109,7 @@ export function CourseDetail({ course }: { course: Course }) {
 
     function handleCheckout() {
         if (!auth.user) {
-            router.visit(`/register?checkout_course=${course.id}`)
+            router.visit(`/courses/${course.id}/checkout`)
             return
         }
         router.post('/courses/checkout', { course_id: course.id }, { preserveScroll: true })

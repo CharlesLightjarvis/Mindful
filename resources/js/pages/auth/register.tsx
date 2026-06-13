@@ -14,10 +14,6 @@ type Props = {
 };
 
 export default function Register({ passwordRules }: Props) {
-    const params       = new URLSearchParams(window.location.search)
-    const checkoutPlan   = params.get('checkout_plan')
-    const checkoutCourse = params.get('checkout_course')
-
     return (
         <>
             <Head title="Register" />
@@ -29,8 +25,6 @@ export default function Register({ passwordRules }: Props) {
             >
                 {({ processing, errors }) => (
                     <>
-                        {checkoutPlan && <input type="hidden" name="checkout_plan" value={checkoutPlan} />}
-                        {checkoutCourse && <input type="hidden" name="checkout_course" value={checkoutCourse} />}
                         <div className="grid gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Name</Label>

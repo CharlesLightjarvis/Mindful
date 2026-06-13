@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Link, router } from '@inertiajs/react';
-import { ImageIcon, PencilIcon, Trash2Icon, MoreHorizontalIcon } from 'lucide-react';
+import { ImageIcon, PencilIcon, Trash2Icon, MoreHorizontalIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,16 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 function RowActions({ course }: { course: Course }) {
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [togglingStatus, setTogglingStatus] = useState(false);
+
+    const isPublished = course.status === 'published';
+
+    function handleToggleStatus() {
+        setTogglingStatus(true);
+        router.patch(CourseController.toggleStatus.url(course), {}, {
+            onFinish: () => setTogglingStatus(false),
+        });
+    }
 
     function handleDelete() {
         setDeleting(true);
@@ -60,6 +70,23 @@ function RowActions({ course }: { course: Course }) {
                             <PencilIcon className="size-4" />
                             Modifier
                         </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        onClick={handleToggleStatus}
+                        disabled={togglingStatus}
+                        className="flex items-center gap-2"
+                    >
+                        {isPublished ? (
+                            <>
+                                <EyeOffIcon className="size-4" />
+                                Passer en brouillon
+                            </>
+                        ) : (
+                            <>
+                                <EyeIcon className="size-4" />
+                                Publier
+                            </>
+                        )}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem

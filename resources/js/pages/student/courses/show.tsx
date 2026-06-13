@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import student from '@/routes/student';
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronUp, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -394,7 +395,7 @@ export default function StudentCourseShow() {
 
 StudentCourseShow.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Mes formations', href: '/student/courses' },
+        { title: 'Dashboard', href: student.dashboard() },
+        { title: 'Mes formations', href: student.courses.index() },
     ],
 };

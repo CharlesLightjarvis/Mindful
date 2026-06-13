@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Trainer\Courses;
 use App\Actions\Trainer\Courses\CreateCourseAction;
 use App\Actions\Trainer\Courses\DeleteCourseAction;
 use App\Actions\Trainer\Courses\UpdateCourseAction;
+use App\Enums\CourseStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Courses\StoreCourseRequest;
 use App\Http\Requests\Admin\Courses\UpdateCourseRequest;
@@ -22,7 +23,7 @@ use Inertia\Response;
 class CourseController extends Controller
 {
     public function __construct(
-        private readonly CourseRepository   $repository,
+        private readonly CourseRepository $repository,
         private readonly CreateCourseAction $createAction,
         private readonly UpdateCourseAction $updateAction,
         private readonly DeleteCourseAction $deleteAction,
@@ -67,7 +68,7 @@ class CourseController extends Controller
         $user = Auth::user();
 
         return Inertia::render('trainer/courses/edit', [
-            'course'     => (new CourseResource($this->repository->find($user, $course->id)))->resolve(),
+            'course' => (new CourseResource($this->repository->find($user, $course->id)))->resolve(),
             'categories' => Category::query()->orderBy('order')->get(['id', 'name']),
         ]);
     }
@@ -90,5 +91,24 @@ class CourseController extends Controller
         return redirect()
             ->route('trainer.courses.index')
             ->with('success', 'Formation supprimée avec succès.');
+    }
+
+    #[Authorize('update', 'course')]
+    public function toggleStatus(Course $course): RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $newStatus = $course->status === CourseStatus::Published
+            ? CourseStatus::Draft
+            : CourseStatus::Published;
+
+        if ($newStatus === CourseStatus::Published && ! $user->stripe_onboarding_completed) {
+            return back()->with('error', 'Configurez votre compte Stripe Connect pour publier une formation et recevoir des paiements.');
+        }
+
+        $course->update(['status' => $newStatus->value]);
+
+        return back()->with('success', "Formation passée en « {$newStatus->label()} ».");
     }
 }

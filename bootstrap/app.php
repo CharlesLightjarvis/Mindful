@@ -7,7 +7,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
-use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
@@ -44,11 +43,4 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
-
-        $exceptions->render(function (UnauthorizedException $e, Request $request) {
-            $previous = url()->previous();
-            $current = $request->url();
-
-            return redirect($previous !== $current ? $previous : route('dashboard'));
-        });
     })->create();

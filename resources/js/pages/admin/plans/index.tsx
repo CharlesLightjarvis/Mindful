@@ -1,5 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
+import admin from '@/routes/admin';
 import PlanList from './partials/plan-list';
 import type { Paginated } from '@/types/pagination';
 import type { Plan } from '@/types/plan';
@@ -31,7 +32,7 @@ export default function PlanIndex() {
 
 PlanIndex.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Plans', href: '/admin/plans' },
+        { title: 'Dashboard', href: admin.dashboard() },
+        { title: 'Plans', href: admin.plans.index() },
     ],
 };

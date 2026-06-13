@@ -34,12 +34,6 @@ class CheckoutController extends Controller
 
     private function createSession(Request $request, Course $course): Response
     {
-        if (! $course->trainer->stripe_account_id || ! $course->trainer->stripe_onboarding_completed) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => 'Ce cours n\'est pas encore disponible à l\'achat.']);
-
-            return redirect()->route('courses.show', $course->id);
-        }
-
         Stripe::setApiKey(config('cashier.secret'));
 
         $session = Session::create([

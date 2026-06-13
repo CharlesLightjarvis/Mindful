@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import student from '@/routes/student';
 import { motion } from 'framer-motion';
 import { BookOpen, Calendar, GraduationCap, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -155,7 +156,7 @@ export default function StudentCoursesIndex() {
 
 StudentCoursesIndex.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Mes formations', href: '/student/courses' },
+        { title: 'Dashboard', href: student.dashboard() },
+        { title: 'Mes formations', href: student.courses.index() },
     ],
 };
