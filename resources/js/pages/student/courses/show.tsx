@@ -1,7 +1,7 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import student from '@/routes/student';
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, ChevronLeft, ChevronUp, PlayCircle } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronLeft, ChevronUp, Circle, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -129,11 +129,13 @@ function LessonRow({
     lesson,
     index,
     isActive,
+    isCompleted,
     onClick,
 }: {
     lesson: Lesson;
     index: number;
     isActive: boolean;
+    isCompleted: boolean;
     onClick: () => void;
 }) {
     return (
@@ -144,18 +146,24 @@ function LessonRow({
                 isActive ? 'bg-muted text-foreground' : 'text-foreground/80'
             }`}
         >
-            <span
-                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-                    isActive
-                        ? 'bg-foreground text-background'
-                        : 'bg-muted text-muted-foreground'
-                }`}
-            >
-                {index + 1}
+            <span className="mt-0.5 shrink-0">
+                {isCompleted ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                ) : (
+                    <span
+                        className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                            isActive
+                                ? 'bg-foreground text-background'
+                                : 'bg-muted text-muted-foreground'
+                        }`}
+                    >
+                        {index + 1}
+                    </span>
+                )}
             </span>
 
             <div className="flex-1">
-                <p className="text-[13px] leading-snug font-medium break-words">
+                <p className={`text-[13px] leading-snug font-medium break-words ${isCompleted ? 'text-muted-foreground' : ''}`}>
                     {lesson.title}
                 </p>
 
@@ -179,16 +187,21 @@ function ModuleSection({
     module,
     moduleIndex,
     activeLesson,
+    completedLessonIds,
     onSelectLesson,
 }: {
     module: Module;
     moduleIndex: number;
     activeLesson: Lesson | null;
+    completedLessonIds: number[];
     onSelectLesson: (lesson: Lesson) => void;
 }) {
     const containsActiveLesson =
         module.lessons?.some((lesson) => lesson.id === activeLesson?.id) ??
         false;
+
+    const completedInModule = module.lessons?.filter((l) => l.id !== undefined && completedLessonIds.includes(l.id)).length ?? 0;
+    const totalInModule = module.lessons?.length ?? 0;
 
     const [open, setOpen] = useState(moduleIndex === 0 || containsActiveLesson);
 
@@ -211,8 +224,8 @@ function ModuleSection({
                     </p>
 
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                        {module.lessons?.length ?? 0} leçon
-                        {(module.lessons?.length ?? 0) > 1 ? 's' : ''}
+                        {completedInModule}/{totalInModule} leçon
+                        {totalInModule > 1 ? 's' : ''}
                     </p>
                 </div>
 
@@ -233,6 +246,7 @@ function ModuleSection({
                             lesson={lesson}
                             index={lessonIndex}
                             isActive={activeLesson?.id === lesson.id}
+                            isCompleted={lesson.id !== undefined && completedLessonIds.includes(lesson.id)}
                             onClick={() => onSelectLesson(lesson)}
                         />
                     ))}
@@ -242,9 +256,21 @@ function ModuleSection({
     );
 }
 
+type PageProps = {
+    course: StudentCourse;
+    completedLessonIds: number[];
+    progressPercentage: number;
+    completedCount: number;
+    totalLessons: number;
+};
+
 export default function StudentCourseShow() {
-    const { course } = usePage<{ course: StudentCourse }>().props;
+    const { course, completedLessonIds: initialCompleted, progressPercentage: initialProgress, completedCount: initialCount, totalLessons } =
+        usePage<PageProps>().props;
     const { pageRef, left } = useDynamicPageLeft();
+
+    const [completedLessonIds, setCompletedLessonIds] = useState<number[]>(initialCompleted);
+    const [isTogglingProgress, setIsTogglingProgress] = useState(false);
 
     const allLessons = course.modules?.flatMap((m) => m.lessons ?? []) ?? [];
 
@@ -268,6 +294,56 @@ export default function StudentCourseShow() {
         activeIndex >= 0 && activeIndex < allLessons.length - 1
             ? allLessons[activeIndex + 1]
             : null;
+
+    const activeLessonCompleted = activeLesson?.id !== undefined ? completedLessonIds.includes(activeLesson.id) : false;
+
+    const completedCount = completedLessonIds.length;
+    const progressPercentage = totalLessons > 0
+        ? Math.round((completedCount / totalLessons) * 100)
+        : 0;
+
+    function toggleLessonComplete() {
+        if (!activeLesson || activeLesson.id === undefined || isTogglingProgress) return;
+
+        const lessonId = activeLesson.id;
+        setIsTogglingProgress(true);
+
+        if (activeLessonCompleted) {
+            setCompletedLessonIds((ids) => ids.filter((id) => id !== lessonId));
+            router.delete(student.lessons.progress.destroy(lessonId).url, {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setIsTogglingProgress(false),
+                onError: () => {
+                    setCompletedLessonIds((ids) => [...ids, lessonId]);
+                    setIsTogglingProgress(false);
+                },
+            });
+        } else {
+            setCompletedLessonIds((ids) => [...ids, lessonId]);
+            router.post(student.lessons.progress.store(lessonId).url, {}, {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setIsTogglingProgress(false),
+                onError: () => {
+                    setCompletedLessonIds((ids) => ids.filter((id) => id !== lessonId));
+                    setIsTogglingProgress(false);
+                },
+            });
+        }
+    }
+
+    function handleNextLesson() {
+        if (nextLesson) {
+            setActiveLesson(nextLesson);
+        }
+    }
+
+    function handlePrevLesson() {
+        if (prevLesson) {
+            setActiveLesson(prevLesson);
+        }
+    }
 
     return (
         <>
@@ -319,11 +395,11 @@ export default function StudentCourseShow() {
                             </span>
 
                             <span className="text-xs text-muted-foreground">
-                                0% complété
+                                {completedCount}/{totalLessons} leçon{totalLessons > 1 ? 's' : ''} · {progressPercentage}%
                             </span>
                         </div>
 
-                        <Progress value={0} className="h-1.5" />
+                        <Progress value={progressPercentage} className="h-1.5" />
                     </div>
 
                     {/* Modules list */}
@@ -334,6 +410,7 @@ export default function StudentCourseShow() {
                                 module={module}
                                 moduleIndex={moduleIndex}
                                 activeLesson={activeLesson}
+                                completedLessonIds={completedLessonIds}
                                 onSelectLesson={setActiveLesson}
                             />
                         ))}
@@ -355,9 +432,7 @@ export default function StudentCourseShow() {
                                 {prevLesson ? (
                                     <Button
                                         variant="outline"
-                                        onClick={() =>
-                                            setActiveLesson(prevLesson)
-                                        }
+                                        onClick={handlePrevLesson}
                                     >
                                         <ChevronLeft className="h-4 w-4" />
                                         Précédent
@@ -366,15 +441,32 @@ export default function StudentCourseShow() {
                                     <div />
                                 )}
 
-                                {nextLesson && (
-                                    <Button
-                                        onClick={() =>
-                                            setActiveLesson(nextLesson)
-                                        }
-                                    >
+                                <Button
+                                    variant={activeLessonCompleted ? 'outline' : 'default'}
+                                    onClick={toggleLessonComplete}
+                                    disabled={isTogglingProgress}
+                                    className={activeLessonCompleted ? 'text-green-600 border-green-200 hover:text-green-700' : ''}
+                                >
+                                    {activeLessonCompleted ? (
+                                        <>
+                                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                            Complété
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Circle className="h-4 w-4" />
+                                            Marquer comme complété
+                                        </>
+                                    )}
+                                </Button>
+
+                                {nextLesson ? (
+                                    <Button onClick={handleNextLesson}>
                                         Suivant
                                         <ChevronLeft className="h-4 w-4 rotate-180" />
                                     </Button>
+                                ) : (
+                                    <div />
                                 )}
                             </div>
                         </div>

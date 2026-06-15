@@ -5,6 +5,7 @@ import { BookOpen, Calendar, GraduationCap, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import type { EnrolledCourse } from '@/types';
 
 function EnrolledCourseCard({
@@ -70,6 +71,17 @@ function EnrolledCourseCard({
                             {enrollment.lesson_count} leçon
                             {enrollment.lesson_count > 1 ? 's' : ''}
                         </span>
+                    </div>
+
+                    <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Progression</span>
+                            <span className="font-medium">{enrollment.progress_percentage}%</span>
+                        </div>
+                        <Progress value={enrollment.progress_percentage} className="h-1.5" />
+                        {enrollment.progress_percentage === 100 && (
+                            <p className="text-xs font-medium text-green-600 dark:text-green-400">Formation terminée ✓</p>
+                        )}
                     </div>
 
                     {enrollment.enrolled_at && (

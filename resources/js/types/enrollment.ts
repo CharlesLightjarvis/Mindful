@@ -9,4 +9,6 @@ export type EnrolledCourse = {
     module_count: number;
     lesson_count: number;
     enrolled_at: string | null;
+    completed_lesson_count: number;
+    progress_percentage: number;
 };
